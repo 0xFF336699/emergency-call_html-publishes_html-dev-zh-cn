@@ -1,7 +1,7 @@
 # GitHub Actions 工作流程：部署静态网站到七牛云对象存储 Kodo
-# 最终简化版 - 直接在脚本中修改 Bucket 名称
+# 调试版本 - 隔离 Secrets 问题
 
-name: Deploy Website to Qiniu Cloud (qshell)
+name: DEBUG - Deploy Website to Qiniu Cloud
 
 on:
   push:
@@ -27,44 +27,27 @@ jobs:
           npm install
           npm run build 
 
-      # 第 3 步：使用 qshell 上传文件并设置缓存策略
-      - name: Upload to Kodo and Set Cache with qshell
+      # 第 3 步：调试 qshell 脚本
+      - name: DEBUG - qshell execution step
         run: |
+          echo "--- DEBUG: Step 3 has started. If you see this, the script block is valid. ---"
+
           # --- 准备工作 ---
-          echo "Downloading and setting up qshell..."
+          echo "DEBUG: Downloading and setting up qshell..."
           wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
           tar -xvf qshell.tar.gz
           mv qshell-v2.10.0-linux-amd64 qshell
           chmod +x qshell
+          echo "DEBUG: qshell setup is complete."
           
-          echo "Configuring qshell account..."
-          ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
+          echo "DEBUG: SKIPPING qshell account command to isolate secret injection issue."
+          # 下面这行被注释掉了，因为它使用了 secrets
+          # ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
           
-          # --- 上传文件 ---
-          echo "Uploading files from 'docs' directory..."
-          # 创建 qshell 上传配置文件
-          cat > qupload.json << EOF
-          {
-              "src_dir": "docs",
-              "bucket": "your-real-bucket-name",
-              "overwrite": true,
-              "rescan_local": true
-          }
-          EOF
-          
-          # TODO: 把上一行的 "your-real-bucket-name" 替换成你真实的 Bucket 名称
+          echo "DEBUG: Preparing to run a qshell command that will fail."
+          echo "DEBUG: We EXPECT to see an error message from qshell itself, not a silent exit 254."
 
-          # 执行上传，10是并发线程数
-          ./qshell qupload 10 qupload.json
+          # 我们尝试执行一个需要账户的命令。它应该会失败，但会打印出 "no account configured" 之类的错误。
+          ./qshell user ls
 
-          # --- 设置缓存 ---
-          echo "Setting 'no-cache' for all HTML files..."
-          # TODO: 把下一行的 "your-real-bucket-name" 替换成你真实的 Bucket 名称
-          BUCKET_NAME="emc-website-dev-zh-cn"
-          
-          ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
-            echo "Setting 'Cache-Control: no-cache' for file: $key"
-            ./qshell chgm $BUCKET_NAME "$key" 'Cache-Control: no-cache'
-          done
-
-          echo "Deployment process completed successfully."
+          echo "DEBUG: If you see this message, it means the script ran to completion."
