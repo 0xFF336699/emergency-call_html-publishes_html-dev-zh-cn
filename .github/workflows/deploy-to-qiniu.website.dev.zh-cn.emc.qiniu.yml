@@ -28,12 +28,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          # 移除了 cache: 'npm' 来解决 "lock file not found" 错误
-          
       - name: Install Dependencies and Build Project
         run: |
           npm install
           npm run build 
+
+      # 新增的调试步骤：列出所有文件，检查构建结果
+      - name: Check build output
+        run: |
+          echo "Listing all files and directories to verify build output:"
+          ls -R
 
       # 第 3 步：使用 qshell 上传文件并设置缓存策略
       - name: Upload to Kodo and Set Cache with qshell
