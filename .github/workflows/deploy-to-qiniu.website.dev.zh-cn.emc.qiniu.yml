@@ -1,4 +1,4 @@
-# 最终部署脚本 - 用于预构建的静态网站
+# 最终部署脚本 - 修正 qshell 安装过程
 
 name: Deploy Pre-built Website to Qiniu
 
@@ -16,31 +16,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 第 2 步：验证 'docs' 文件夹是否存在 (可选，但推荐)
-      - name: Verify 'docs' folder exists
-        run: |
-          echo "Listing repository contents to ensure 'docs' folder is present:"
-          ls -R
-
-      # 第 3 步：使用 qshell 上传并设置缓存
+      # 第 2 步：使用 qshell 上传并设置缓存
       - name: Upload to Qiniu and Set Cache
         run: |
           # --- 准备工作 ---
-          echo "Downloading and setting up qshell..."
+          echo "Downloading qshell..."
           wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
+          
+          echo "Extracting qshell..."
           tar -xvf qshell.tar.gz
-          mv qshell-v2.10.0-linux-amd64 qshell
+          
+          echo "Listing files after extraction to confirm contents:"
+          ls -l
+          
+          # 修正：不再需要 mv 命令，直接为解压出的 qshell 文件添加执行权限
+          echo "Making qshell executable..."
           chmod +x qshell
           
           # --- 配置账户 ---
-          # 这一步将再次尝试使用你的 Secrets。
-          # 如果再次静默失败，请务必重新生成你的 AK/SK 并更新到 GitHub Secrets。
           echo "Configuring qshell account..."
           ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
           
           # --- 上传文件 ---
           echo "Uploading files from 'docs' directory..."
-          # 创建 qshell 上传配置文件，Bucket 名称已为你填好
           cat > qupload.json << EOF
           {
               "src_dir": "docs",
@@ -55,7 +53,7 @@ jobs:
 
           # --- 设置缓存 ---
           echo "Setting 'no-cache' for all HTML files..."
-          BUCKET_NAME="emc-website-dev-zh-cn" # Bucket 名称已为你填好
+          BUCKET_NAME="emc-website-dev-zh-cn"
           
           ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
             echo "Setting 'Cache-Control: no-cache' for file: $key"
