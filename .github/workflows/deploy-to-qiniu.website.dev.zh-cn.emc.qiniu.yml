@@ -1,4 +1,4 @@
-# 最终部署脚本 - 修正 qshell qupload 命令
+# 最终部署脚本 - 解决 qshell 上传后卡顿问题
 
 name: Deploy Pre-built Website to Qiniu
 
@@ -31,16 +31,18 @@ jobs:
           
           # --- 上传文件 ---
           echo "Uploading files from 'docs' directory..."
+          # 在配置文件中增加 log_level: "warn" 来禁用进度条，防止卡顿
           cat > qupload.json << EOF
           {
               "src_dir": "docs",
               "bucket": "emc-website-dev-zh-cn",
               "overwrite": true,
-              "rescan_local": true
+              "rescan_local": true,
+              "log_level": "warn"
           }
           EOF
           
-          # 修正：使用 -c 参数来指定并发数
+          # 执行上传
           echo "Executing qshell upload..."
           ./qshell qupload -c 10 qupload.json
 
