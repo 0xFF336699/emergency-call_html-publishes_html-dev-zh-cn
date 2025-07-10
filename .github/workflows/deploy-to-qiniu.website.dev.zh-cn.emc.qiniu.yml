@@ -1,22 +1,43 @@
-name: Ultimate Debug Workflow
+name: Deploy Static Website to Qiniu Cloud (qshell)
 
 on:
   push:
     branches:
-      - main
+      - main   # ⚠️ 如果你是提交到 pages 分支，就写 pages
 
 jobs:
-  debug-job:
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Step 1 - A simple echo command
-        run: |
-          echo "Hello from the debug workflow!"
-          echo "If you can see this message, the basic runner is working."
 
-      - name: Step 2 - Checkout code and list files
+    env:
+      # TODO: 修改成你的 Bucket 名
+      QINIU_BUCKET_NAME: emc-website-dev-zh-cn
+
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v4
-      - name: List files in the repository
+
+      - name: Download and configure qshell
         run: |
-          echo "Listing files and directories:"
-          ls -laR
+          wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
+          tar -xvf qshell.tar.gz
+          chmod +x qshell-v2.10.0-linux-amd64/qshell
+
+          echo "Configure qshell account..."
+          ./qshell-v2.10.0-linux-amd64/qshell account "${{ secrets.QINIU_ACCESS_KEY }}" "${{ secrets.QINIU_SECRET_KEY }}" deploy_user
+
+      - name: Upload files to Qiniu
+        run: |
+          echo "Start upload..."
+          ./qshell-v2.10.0-linux-amd64/qshell qupload2 \
+            --src-dir=docs \                  # ⚠️ TODO: 如果你静态文件在根目录，就写 .
+            --bucket=${QINIU_BUCKET_NAME} \
+            --overwrite
+
+      - name: Set Cache-Control no-cache for HTML
+        run: |
+          ./qshell-v2.10.0-linux-amd64/qshell listbucket ${QINIU_BUCKET_NAME} --limit 10000 | grep '\.html$' | \
+          xargs -I {} ./qshell-v2.10.0-linux-amd64/qshell chgm ${QINIU_BUCKET_NAME} {} 'Cache-Control: no-cache'
+
+      - name: Done
+        run: echo "✅ Static website deployed successfully!"
