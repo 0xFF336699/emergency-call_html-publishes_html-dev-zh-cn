@@ -1,11 +1,5 @@
 # GitHub Actions 工作流程：部署静态网站到七牛云对象存储 Kodo
-# 最终版本 - 全程使用 qshell，不再依赖外部 Action
-#
-# 使用前请确保：
-# 1. 在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中设置了以下两个 Secret:
-#    - QINIU_ACCESS_KEY: 你的七牛云 Access Key
-#    - QINIU_SECRET_KEY: 你的七牛云 Secret Key
-# 2. 修改下面标记为 "TODO" 的占位符。
+# 最终简化版 - 直接在脚本中修改 Bucket 名称
 
 name: Deploy Website to Qiniu Cloud (qshell)
 
@@ -33,12 +27,6 @@ jobs:
           npm install
           npm run build 
 
-      # 新增的调试步骤：列出所有文件，检查构建结果
-      - name: Check build output
-        run: |
-          echo "Listing all files and directories to verify build output:"
-          ls -R
-
       # 第 3 步：使用 qshell 上传文件并设置缓存策略
       - name: Upload to Kodo and Set Cache with qshell
         run: |
@@ -58,21 +46,21 @@ jobs:
           cat > qupload.json << EOF
           {
               "src_dir": "docs",
-              "bucket": "your-bucket-name",
+              "bucket": "your-real-bucket-name",
               "overwrite": true,
               "rescan_local": true
           }
           EOF
           
-          # 使用 env 变量替换 bucket 名称
-          sed -i "s/your-bucket-name/${QINIU_BUCKET_NAME}/g" qupload.json
+          # TODO: 把上一行的 "your-real-bucket-name" 替换成你真实的 Bucket 名称
 
           # 执行上传，10是并发线程数
           ./qshell qupload 10 qupload.json
 
           # --- 设置缓存 ---
           echo "Setting 'no-cache' for all HTML files..."
-          BUCKET_NAME="${QINIU_BUCKET_NAME}"
+          # TODO: 把下一行的 "your-real-bucket-name" 替换成你真实的 Bucket 名称
+          BUCKET_NAME="emc-website-dev-zh-cn"
           
           ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
             echo "Setting 'Cache-Control: no-cache' for file: $key"
@@ -80,6 +68,3 @@ jobs:
           done
 
           echo "Deployment process completed successfully."
-        env:
-          # TODO: 在下面填入你的 Bucket 名称
-          QINIU_BUCKET_NAME: emc-website-dev-zh-cn
