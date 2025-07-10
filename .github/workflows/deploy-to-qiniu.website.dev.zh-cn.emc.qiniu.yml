@@ -24,8 +24,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 第 2 步：(可选) 构建你的网站
-      # 对于 Next.js 项目，构建步骤是必须的。请取消下面的注释并确认命令正确。
+      # 第 2 步：构建你的网站
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
@@ -34,26 +33,25 @@ jobs:
       - name: Install Dependencies and Build Project
         run: |
           npm install
-          # 通常 Next.js 的静态导出命令是 'next build && next export'
-          # 构建产物默认在 'out' 文件夹
+          # 确保你的构建命令会把产物输出到 'docs' 目录
           npm run build 
 
-      # 第 3 步：上传文件到七牛云
+      # 第 3 步：上传文件到七牛云 (使用官方 Action)
       - name: Upload Files to Qiniu Kodo
-        uses: jemygraw/qiniu-upload-action@v1.3
+        uses: qiniu/upload-to-qiniu-kodo-action@v1
         with:
-          access_key: r4w-yJBoj9iZgM6QEn8xksL8XZtTBBkitr1Y6z4X
-          secret_key: EzOpoFpoU8kvq5Xq9O8xi8CTqQ7GZqECvWCGSxN9
+          # 关键：从 GitHub Secrets 中读取 AK 和 SK，保证安全
+          ak: ${{ secrets.QINIU_ACCESS_KEY }}
+          sk: ${{ secrets.QINIU_SECRET_KEY }}
           
           # TODO: 修改为你在七牛云创建的存储空间名称 (Bucket)
           bucket: 'emc-website-dev-zh-cn' 
           
-          # TODO: 修改为需要上传的文件夹路径
-          # 对于 Next.js 静态导出，默认是 'out' 文件夹
-          source_dir: 'docs' 
+          # 关键：根据你的设置，源目录已修改为 'docs'
+          source-dir: 'docs' 
           
-          # (可选) 忽略某些文件或文件夹
-          # ignore_source_map: true
+          # (可选) 上传到 bucket 中的哪个子目录，默认为根目录 '/'
+          # dest-dir: '/'
 
       # 第 4 步：为所有 HTML 文件设置 'no-cache' 缓存策略
       - name: Set 'no-cache' for all HTML files
@@ -65,7 +63,7 @@ jobs:
           mv qshell-v2.10.0-linux-amd64 qshell
           chmod +x qshell
           
-          # 配置 qshell ��户信息
+          # 配置 qshell 账户信息
           echo "Configuring qshell account..."
           ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
           
