@@ -1,68 +1,22 @@
-# GitHub Actions 工作流程：部署静态网站到七牛云对象存储 Kodo
-# 全程使用 qshell v2.10.0 + qupload2，不依赖外部 Action
-#
-# 使用前必做：
-# 1. 在仓库 Settings → Secrets and variables → Actions 中添加：
-#    - QINIU_ACCESS_KEY: 你的七牛 Access Key
-#    - QINIU_SECRET_KEY: 你的七牛 Secret Key
-# 2. 修改下面的 QINIU_BUCKET_NAME 为你的 Bucket 名
-# 3. 确认构建产物目录（如 dist / docs）一致
-
-name: Deploy Website to Qiniu Cloud (qshell)
+name: Ultimate Debug Workflow
 
 on:
   push:
     branches:
-      - main   # 如需改分支，这里改
+      - main
 
 jobs:
-  build-and-deploy:
+  debug-job:
     runs-on: ubuntu-latest
-
-    env:
-      # TODO: 修改成你的 bucket 名
-      QINIU_BUCKET_NAME: emc-website-dev-zh-cn
-
     steps:
-      - name: 拉取代码
+      - name: Step 1 - A simple echo command
+        run: |
+          echo "Hello from the debug workflow!"
+          echo "If you can see this message, the basic runner is working."
+
+      - name: Step 2 - Checkout code and list files
         uses: actions/checkout@v4
-
-      - name: 设置 Node.js 环境
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: 安装依赖并构建项目
+      - name: List files in the repository
         run: |
-          npm install
-          npm run build
-
-      - name: 查看构建产物
-        run: ls -R
-
-      - name: 下载并配置 qshell
-        run: |
-          echo "下载 qshell..."
-          wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
-          tar -xvf qshell.tar.gz
-          chmod +x qshell-v2.10.0-linux-amd64/qshell
-
-          echo "配置七牛账户..."
-          ./qshell-v2.10.0-linux-amd64/qshell account "${{ secrets.QINIU_ACCESS_KEY }}" "${{ secrets.QINIU_SECRET_KEY }}" deploy_user
-
-      - name: 上传文件到七牛 (qupload2)
-        run: |
-          echo "开始上传..."
-          ./qshell-v2.10.0-linux-amd64/qshell qupload2 \
-            --src-dir=docs \                   # ⚠️ TODO: 如果产物在 dist，就写 dist
-            --bucket=${QINIU_BUCKET_NAME} \
-            --overwrite
-          
-      - name: 为所有 HTML 文件设置 'no-cache'
-        run: |
-          echo "设置 HTML 文件 Cache-Control: no-cache..."
-          ./qshell-v2.10.0-linux-amd64/qshell listbucket ${QINIU_BUCKET_NAME} --limit 10000 | grep '\.html$' | \
-          xargs -I {} ./qshell-v2.10.0-linux-amd64/qshell chgm ${QINIU_BUCKET_NAME} {} 'Cache-Control: no-cache'
-
-      - name: ✅ 部署完成
-        run: echo "✅ 部署到七牛成功！"
+          echo "Listing files and directories:"
+          ls -laR
