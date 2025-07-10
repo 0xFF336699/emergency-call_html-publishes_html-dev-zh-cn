@@ -1,43 +1,65 @@
-name: Deploy Static Website to Qiniu Cloud (qshell)
+# 最终部署脚本 - 用于预构建的静态网站
+
+name: Deploy Pre-built Website to Qiniu
 
 on:
   push:
     branches:
-      - main   # ⚠️ 如果你是提交到 pages 分支，就写 pages
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      # TODO: 修改成你的 Bucket 名
-      QINIU_BUCKET_NAME: emc-website-dev-zh-cn
-
     steps:
-      - name: Checkout code
+      # 第 1 步：拉取包含 'docs' 文件夹的仓库代码
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download and configure qshell
+      # 第 2 步：验证 'docs' 文件夹是否存在 (可选，但推荐)
+      - name: Verify 'docs' folder exists
         run: |
+          echo "Listing repository contents to ensure 'docs' folder is present:"
+          ls -R
+
+      # 第 3 步：使用 qshell 上传并设置缓存
+      - name: Upload to Qiniu and Set Cache
+        run: |
+          # --- 准备工作 ---
+          echo "Downloading and setting up qshell..."
           wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
           tar -xvf qshell.tar.gz
-          chmod +x qshell-v2.10.0-linux-amd64/qshell
+          mv qshell-v2.10.0-linux-amd64 qshell
+          chmod +x qshell
+          
+          # --- 配置账户 ---
+          # 这一步将再次尝试使用你的 Secrets。
+          # 如果再次静默失败，请务必重新生成你的 AK/SK 并更新到 GitHub Secrets。
+          echo "Configuring qshell account..."
+          ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
+          
+          # --- 上传文件 ---
+          echo "Uploading files from 'docs' directory..."
+          # 创建 qshell 上传配置文件，Bucket 名称已为你填好
+          cat > qupload.json << EOF
+          {
+              "src_dir": "docs",
+              "bucket": "emc-website-dev-zh-cn",
+              "overwrite": true,
+              "rescan_local": true
+          }
+          EOF
+          
+          # 执行上传
+          ./qshell qupload 10 qupload.json
 
-          echo "Configure qshell account..."
-          ./qshell-v2.10.0-linux-amd64/qshell account "${{ secrets.QINIU_ACCESS_KEY }}" "${{ secrets.QINIU_SECRET_KEY }}" deploy_user
+          # --- 设置缓存 ---
+          echo "Setting 'no-cache' for all HTML files..."
+          BUCKET_NAME="emc-website-dev-zh-cn" # Bucket 名称已为你填好
+          
+          ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
+            echo "Setting 'Cache-Control: no-cache' for file: $key"
+            ./qshell chgm $BUCKET_NAME "$key" 'Cache-Control: no-cache'
+          done
 
-      - name: Upload files to Qiniu
-        run: |
-          echo "Start upload..."
-          ./qshell-v2.10.0-linux-amd64/qshell qupload2 \
-            --src-dir=docs \                  # ⚠️ TODO: 如果你静态文件在根目录，就写 .
-            --bucket=${QINIU_BUCKET_NAME} \
-            --overwrite
-
-      - name: Set Cache-Control no-cache for HTML
-        run: |
-          ./qshell-v2.10.0-linux-amd64/qshell listbucket ${QINIU_BUCKET_NAME} --limit 10000 | grep '\.html$' | \
-          xargs -I {} ./qshell-v2.10.0-linux-amd64/qshell chgm ${QINIU_BUCKET_NAME} {} 'Cache-Control: no-cache'
-
-      - name: Done
-        run: echo "✅ Static website deployed successfully!"
+          echo "Deployment process completed successfully."
