@@ -1,74 +1,53 @@
 # GitHub Actions 工作流程：部署静态网站到七牛云对象存储 Kodo
-# 使用 qshell v2.10.0，不依赖外部 Action
-#
-# 使用前请务必：
-# 1. 在仓库 Settings → Secrets and variables → Actions 中配置：
-#    - QINIU_ACCESS_KEY
-#    - QINIU_SECRET_KEY
-# 2. 修改 QINIU_BUCKET_NAME 为你的 Bucket 名
-# 3. 确认构建产物目录（比如 docs、dist）与实际一致
+# 调试版本 - 隔离 Secrets 问题
 
-name: Deploy Website to Qiniu Cloud (qshell)
+name: DEBUG - Deploy Website to Qiniu Cloud
 
 on:
   push:
     branches:
-      - main   # 根据需要改分支
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    env:
-      # TODO: 修改成你的 Bucket 名
-      QINIU_BUCKET_NAME: emc-website-dev-zh-cn
-
     steps:
+      # 第 1 步：拉取你的 GitHub 仓库代码
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      # 第 2 步：构建你的网站
+      - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: Install dependencies and build project
+      - name: Install Dependencies and Build Project
         run: |
           npm install
-          npm run build
+          npm run build 
 
-      - name: Show build output
-        run: ls -R
-
-      - name: Download and configure qshell
+      # 第 3 步：调试 qshell 脚本
+      - name: DEBUG - qshell execution step
         run: |
+          echo "--- DEBUG: Step 3 has started. If you see this, the script block is valid. ---"
+
+          # --- 准备工作 ---
+          echo "DEBUG: Downloading and setting up qshell..."
           wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
           tar -xvf qshell.tar.gz
-          chmod +x qshell-v2.10.0-linux-amd64/qshell
+          mv qshell-v2.10.0-linux-amd64 qshell
+          chmod +x qshell
+          echo "DEBUG: qshell setup is complete."
+          
+          echo "DEBUG: SKIPPING qshell account command to isolate secret injection issue."
+          # 下面这行被注释掉了，因为它使用了 secrets
+          # ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
+          
+          echo "DEBUG: Preparing to run a qshell command that will fail."
+          echo "DEBUG: We EXPECT to see an error message from qshell itself, not a silent exit 254."
 
-          echo "Configuring qshell account..."
-          ./qshell-v2.10.0-linux-amd64/qshell account "${{ secrets.QINIU_ACCESS_KEY }}" "${{ secrets.QINIU_SECRET_KEY }}" deploy_user
+          # 我们尝试执行一个需要账户的命令。它应该会失败，但会打印出 "no account configured" 之类的错误。
+          ./qshell user ls
 
-      - name: Upload files to Qiniu (using qupload2)
-        run: |
-          echo "Creating upload config..."
-          cat > qupload.json << EOF
-          {
-              "src_dir": "docs",   # TODO: 如果是 dist，就写 dist
-              "bucket": "${QINIU_BUCKET_NAME}",
-              "overwrite": true,
-              "rescan_local": true
-          }
-          EOF
-
-          echo "Starting upload..."
-          ./qshell-v2.10.0-linux-amd64/qshell qupload2 --worker=10 qupload.json
-
-      - name: Set 'no-cache' for all HTML files
-        run: |
-          echo "Listing HTML files and setting Cache-Control..."
-          ./qshell-v2.10.0-linux-amd64/qshell listbucket ${QINIU_BUCKET_NAME} --limit 10000 | grep '\.html$' | \
-          xargs -I {} ./qshell-v2.10.0-linux-amd64/qshell chgm ${QINIU_BUCKET_NAME} {} 'Cache-Control: no-cache'
-
-      - name: Done
-        run: echo "✅ Deployment completed successfully!"
+          echo "DEBUG: If you see this message, it means the script ran to completion."
