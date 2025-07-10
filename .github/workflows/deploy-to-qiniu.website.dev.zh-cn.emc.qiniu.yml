@@ -28,7 +28,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          # 移除了 cache: 'npm' 来解决 "lock file not found" 错误
+          
       - name: Install Dependencies and Build Project
         run: |
           npm install
@@ -59,7 +60,7 @@ jobs:
           }
           EOF
           
-          # TODO: 确认你的 Bucket 名称
+          # 使用 env 变量替换 bucket 名称
           sed -i "s/your-bucket-name/${QINIU_BUCKET_NAME}/g" qupload.json
 
           # 执行上传，10是并发线程数
@@ -67,7 +68,7 @@ jobs:
 
           # --- 设置缓存 ---
           echo "Setting 'no-cache' for all HTML files..."
-          BUCKET_NAME="${QINIU_BUCKET_NAME}" # TODO: 再次确认你的 Bucket 名称
+          BUCKET_NAME="${QINIU_BUCKET_NAME}"
           
           ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
             echo "Setting 'Cache-Control: no-cache' for file: $key"
@@ -76,5 +77,5 @@ jobs:
 
           echo "Deployment process completed successfully."
         env:
-          # TODO: 在下面填入你的 Bucket 名称，它将被用于脚本中的替换
+          # TODO: 在下面填入你的 Bucket 名称
           QINIU_BUCKET_NAME: emc-website-dev-zh-cn
