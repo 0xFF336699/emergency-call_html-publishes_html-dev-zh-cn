@@ -1,63 +1,52 @@
-# 最终部署脚本 - 修正 qshell 安装过程
-
-name: Deploy Pre-built Website to Qiniu
+name: Deploy Static Website to Qiniu Cloud (qshell)
 
 on:
   push:
     branches:
-      - main
+      - main   # ⚠️ 根据实际修改：比如你用 pages 分支，就写 pages
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      # TODO: 修改成你的七牛 bucket 名
+      QINIU_BUCKET_NAME: emc-website-dev-zh-cn
+
     steps:
-      # 第 1 步：拉取包含 'docs' 文件夹的仓库代码
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 第 2 步：使用 qshell 上传并设置缓存
-      - name: Upload to Qiniu and Set Cache
+      - name: Download and configure qshell
         run: |
-          # --- 准备工作 ---
           echo "Downloading qshell..."
-          wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
+          wget -O qshell.tar.gz https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz
           
-          echo "Extracting qshell..."
-          tar -xvf qshell.tar.gz
+          echo "Unpacking..."
+          tar -zxvf qshell.tar.gz
           
-          echo "Listing files after extraction to confirm contents:"
-          ls -l
+          echo "Check unpacked files:"
+          ls -l qshell-v2.10.0-linux-amd64
           
-          # 修正：不再需要 mv 命令，直接为解压出的 qshell 文件添加执行权限
-          echo "Making qshell executable..."
-          chmod +x qshell
+          echo "Add execute permission..."
+          chmod +x qshell-v2.10.0-linux-amd64/qshell
           
-          # --- 配置账户 ---
-          echo "Configuring qshell account..."
-          ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
-          
-          # --- 上传文件 ---
-          echo "Uploading files from 'docs' directory..."
-          cat > qupload.json << EOF
-          {
-              "src_dir": "docs",
-              "bucket": "emc-website-dev-zh-cn",
-              "overwrite": true,
-              "rescan_local": true
-          }
-          EOF
-          
-          # 执行上传
-          ./qshell qupload 10 qupload.json
+          echo "Configure qshell account..."
+          ./qshell-v2.10.0-linux-amd64/qshell account "${{ secrets.QINIU_ACCESS_KEY }}" "${{ secrets.QINIU_SECRET_KEY }}" deploy_user
 
-          # --- 设置缓存 ---
-          echo "Setting 'no-cache' for all HTML files..."
-          BUCKET_NAME="emc-website-dev-zh-cn"
-          
-          ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
-            echo "Setting 'Cache-Control: no-cache' for file: $key"
-            ./qshell chgm $BUCKET_NAME "$key" 'Cache-Control: no-cache'
-          done
+      - name: Upload static files to Qiniu
+        run: |
+          echo "Start uploading..."
+          ./qshell-v2.10.0-linux-amd64/qshell qupload2 \
+            --src-dir=docs \                  # ⚠️ 如果静态文件在根目录就写 .
+            --bucket=${QINIU_BUCKET_NAME} \
+            --overwrite
 
-          echo "Deployment process completed successfully."
+      - name: Set Cache-Control no-cache for all HTML files
+        run: |
+          echo "Set no-cache for HTML files..."
+          ./qshell-v2.10.0-linux-amd64/qshell listbucket ${QINIU_BUCKET_NAME} --limit 10000 | grep '\.html$' | \
+          xargs -I {} ./qshell-v2.10.0-linux-amd64/qshell chgm ${QINIU_BUCKET_NAME} {} 'Cache-Control: no-cache'
+
+      - name: Done
+        run: echo "✅ Deployment to Qiniu finished successfully!"
