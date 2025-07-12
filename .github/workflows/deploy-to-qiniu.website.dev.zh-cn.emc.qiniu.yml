@@ -1,81 +1,70 @@
-# GitHub Actions 工作流程：部署静态网站到七牛云对象存储 Kodo
-# 文件名: deploy-to-qiniu.website.dev.zh-cn.emc.qiniu.yml
-#
-# 使用前请确保：
-# 1. 在 GitHub 仓库的 Settings -> Secrets and variables -> Actions 中设置了以下两个 Secret:
-#    - QINIU_ACCESS_KEY: 你的七牛云 Access Key
-#    - QINIU_SECRET_KEY: 你的七牛云 Secret Key
-# 2. 修改下面标记为 "TODO" 的占位符。
+# 最终部署脚本 - 实现原子化上传
 
-name: Deploy Website to Qiniu Cloud
+name: Deploy Pre-built Website to Qiniu
 
-# 触发条件：当代码被推送到 main 分支时执行
 on:
   push:
     branches:
       - main
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest # 使用最新的 Ubuntu 环境来执行任务
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      # 第 1 步：拉取你的 GitHub 仓库代码
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 第 2 步：(可选) 构建你的网站
-      # 对于 Next.js 项目，构建步骤是必须的。请取消下面的注释并确认命令正确。
-      - name: Setup Node.js Environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18' # 指定你项目使用的 Node.js 版本
-          cache: 'npm' # 缓存 npm 依赖，加快后续构建速度
-      - name: Install Dependencies and Build Project
+      - name: Upload to Qiniu and Set Cache
         run: |
-          npm install
-          # 通常 Next.js 的静态导出命令是 'next build && next export'
-          # 构建产物默认在 'out' 文件夹
-          npm run build 
-
-      # 第 3 步：上传文件到七牛云
-      - name: Upload Files to Qiniu Kodo
-        uses: jemygraw/qiniu-upload-action@v1.3
-        with:
-          access_key: r4w-yJBoj9iZgM6QEn8xksL8XZtTBBkitr1Y6z4X
-          secret_key: EzOpoFpoU8kvq5Xq9O8xi8CTqQ7GZqECvWCGSxN9
-          
-          # TODO: 修改为你在七牛云创建的存储空间名称 (Bucket)
-          bucket: 'emc-website-dev-zh-cn' 
-          
-          # TODO: 修改为需要上传的文件夹路径
-          # 对于 Next.js 静态导出，默认是 'out' 文件夹
-          source_dir: 'docs' 
-          
-          # (可选) 忽略某些文件或文件夹
-          # ignore_source_map: true
-
-      # 第 4 步：为所有 HTML 文件设置 'no-cache' 缓存策略
-      - name: Set 'no-cache' for all HTML files
-        run: |
-          # 下载并准备 qshell 工具
-          echo "Downloading qshell..."
+          # --- 准备工作 ---
+          echo "Downloading and setting up qshell..."
           wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
           tar -xvf qshell.tar.gz
-          mv qshell-v2.10.0-linux-amd64 qshell
           chmod +x qshell
           
-          # 配置 qshell ��户信息
+          # --- 配置账户 ---
           echo "Configuring qshell account..."
           ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
           
-          # 核心步骤：列出bucket中所有文件，筛选出.html文件，然后循环为它们设置 no-cache
-          echo "Finding and updating cache policy for all .html files..."
-          BUCKET_NAME="your-bucket-name" # TODO: 再次确认你的 Bucket 名称
-          
+          # --- 第 1 步：上传除 HTML 外的所有资源文件 ---
+          echo "Step 1: Uploading assets (JS, CSS, etc.)..."
+          cat > qupload-assets.json << EOF
+          {
+              "src_dir": "docs",
+              "bucket": "emc-website-dev-zh-cn",
+              "overwrite": true,
+              "rescan_local": true,
+              "log_level": "warn",
+              "ignore_patterns": [
+                  "*.html"
+              ]
+          }
+          EOF
+          ./qshell qupload -c 10 qupload-assets.json
+
+          # --- 第 2 步：上传 HTML 入口文件 ---
+          echo "Step 2: Uploading HTML entry files..."
+          cat > qupload-html.json << EOF
+          {
+              "src_dir": "docs",
+              "bucket": "emc-website-dev-zh-cn",
+              "overwrite": true,
+              "rescan_local": true,
+              "log_level": "warn",
+              "file_list": "html-files.txt"
+          }
+          EOF
+          # 生成一个只包含 html 文件的列表
+          find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
+          ./qshell qupload -c 10 qupload-html.json
+
+          # --- 第 3 步：为所有 HTML 文件设置缓存 ---
+          echo "Step 3: Setting 'no-cache' for all HTML files..."
+          BUCKET_NAME="emc-website-dev-zh-cn"
           ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
             echo "Setting 'Cache-Control: no-cache' for file: $key"
             ./qshell chgm $BUCKET_NAME "$key" 'Cache-Control: no-cache'
           done
 
-          echo "Cache policies for all HTML files have been set successfully."
+          echo "Atomic deployment process completed successfully."
