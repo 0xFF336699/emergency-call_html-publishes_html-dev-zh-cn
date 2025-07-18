@@ -1,10 +1,10 @@
-# 最终方案：物理分离，只上传 HTML (手动创建目录)
+# 最终方案 v11：全面刷新带与不带斜杠的 URL
 name: Deploy ONLY HTML to Qiniu
 
 on:
   push:
     branches:
-      - main # 或者你的触发分支
+      - main
 
 jobs:
   deploy-html-only:
@@ -15,40 +15,26 @@ jobs:
 
       - name: Upload ONLY HTML files to Qiniu
         env:
-          # 请确保这些 Secrets 已经在你的仓库中设置好
           QINIU_BUCKET_NAME: ${{ secrets.QINIU_BUCKET_NAME }}
           QINIU_ACCESS_KEY: ${{ secrets.QINIU_ACCESS_KEY }}
           QINIU_SECRET_KEY: ${{ secrets.QINIU_SECRET_KEY }}
-          QINIU_DOMAIN: ${{ secrets.QINIU_DOMAIN }} # 新增一个域名 Secret
+          QINIU_DOMAIN: ${{ secrets.QINIU_DOMAIN }}
         run: |
-          # --- 1. 准备工作 ---
-          echo "Downloading and setting up qshell v2.16.0..."
+          # --- 步骤 1, 2, 3 保持不变 ---
+          echo "Downloading and setting up qshell..."
           wget https://github.com/qiniu/qshell/releases/download/v2.16.0/qshell-v2.16.0-linux-amd64.tar.gz -O qshell.tar.gz
           tar -xvf qshell.tar.gz
           chmod +x qshell
-          
-          echo "Configuring qshell account..."
           ./qshell account $QINIU_ACCESS_KEY $QINIU_SECRET_KEY deploy_user
 
-          # --- 2. 核心步骤：创建只包含 HTML 的临时目录 ---
           echo "Creating a temporary directory with only HTML files..."
-          # 目标目录
           TARGET_DIR="html_only"
           mkdir -p $TARGET_DIR
-          
-          # 查找所有 HTML 文件并复制
           find docs -type f -name "*.html" | while read -r filepath; do
-            # 在目标目录中创建相应的父目录
             mkdir -p "$TARGET_DIR/$(dirname "$filepath")"
-            # 复制文件
             cp "$filepath" "$TARGET_DIR/$filepath"
           done
           
-          echo "--- Verifying contents of the temporary directory ---"
-          # 打印出临时目录的结构，以供检查
-          ls -R $TARGET_DIR
-
-          # --- 3. 上传这个只包含 HTML 的临时目录 ---
           echo "Uploading the temporary directory..."
           cat > qupload-html.json << EOF
           {
@@ -59,16 +45,42 @@ jobs:
               "log_level": "info"
           }
           EOF
-          
           ./qshell qupload -c 10 qupload-html.json
 
-          # --- 4. 刷新 CDN 缓存 ---
-          echo "Refreshing CDN cache for HTML files..."
-          # 从原始目录查找 HTML，生成刷新列表
+          # --- 4. 核心修改：刷新 CDN 缓存 (带与不带斜杠) ---
+          echo "Refreshing CDN cache for HTML files (with and without trailing slash)..."
           find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
-          # 使用 QINIU_DOMAIN 这个 Secret 来构建 URL
-          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://emc-website-dev-zh-cn.qiniu.fanfanlo.com/" '{print domain$0}' > urls_to_refresh.txt
           
+          # 创建一个空的刷新列表文件
+          > urls_to_refresh.txt
+
+          # 循环处理每个html文件
+          cat html-files.txt | while read -r filepath; do
+            # 去掉 index.html
+            path_no_index=$(echo "$filepath" | sed 's/index\.html$//')
+            # 去掉 .html 后缀
+            path_no_ext=$(echo "$path_no_index" | sed 's/\.html$//')
+            
+            # 生成带斜杠的 URL (如果不是根目录)
+            if [ -n "$path_no_index" ] && [ "${path_no_index: -1}" == "/" ]; then
+              echo "$QINIU_DOMAIN$path_no_index" >> urls_to_refresh.txt
+            fi
+
+            # 生成不带斜杠的 URL
+            if [ "$path_no_ext" != "$path_no_index" ] || [ -z "$path_no_index" ]; then
+               # 如果路径是根目录，或者路径末尾不是斜杠，则添加不带斜杠的版本
+               if [ -n "$path_no_ext" ]; then
+                  echo "$QINIU_DOMAIN$path_no_ext" >> urls_to_refresh.txt
+               else
+                  # 处理根目录 index.html 的情况
+                  echo "$QINIU_DOMAIN" >> urls_to_refresh.txt
+               fi
+            fi
+          done
+          
+          # 去重，防止重复刷新
+          sort -u urls_to_refresh.txt -o urls_to_refresh.txt
+
           echo "--- URLs to be refreshed ---"
           cat urls_to_refresh.txt
           
