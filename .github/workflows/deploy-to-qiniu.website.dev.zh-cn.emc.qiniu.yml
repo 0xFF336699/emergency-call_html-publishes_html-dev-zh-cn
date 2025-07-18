@@ -1,4 +1,4 @@
-# 混合方案 v3：使用双重保险模式精确上传 HTML
+# 混合方案 v4：修正 file_list 问题并增加 Debug 日志
 name: Deploy HTML to Qiniu (Assets via GitHub Pages)
 
 on:
@@ -28,40 +28,33 @@ jobs:
           echo "Configuring qshell account..."
           ./qshell account $QINIU_ACCESS_KEY $QINIU_SECRET_KEY deploy_user
 
-          # --- 上传 HTML 文件 (使用双重保险) ---
-          echo "Uploading only HTML files to Qiniu using double insurance..."
+          # --- 上传 HTML 文件 ---
+          echo "Uploading only HTML files to Qiniu..."
           cat > qupload-html.json << EOF
           {
               "src_dir": "docs",
               "bucket": "$QINIU_BUCKET_NAME",
               "overwrite": true,
               "rescan_local": true,
-              "log_level": "info",
-              "ignore_patterns": [
-                  "*.js",
-                  "*.css",
-                  "*.png",
-                  "*.jpg",
-                  "*.jpeg",
-                  "*.gif",
-                  "*.svg",
-                  "*.webp",
-                  "*.ico",
-                  "*.json",
-                  "*.txt",
-                  "*.md"
-              ],
-              "include_patterns": [
-                  "*.html"
-              ]
+              "log_level": "debug",
+              "file_list": "html-files.txt"
           }
           EOF
           
-          ./qshell qupload -c 10 qupload-html.json
+          # 生成一个只包含 html 文件的列表
+          find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
+          
+          # 调试步骤：打印列表内容和文件格式信息
+          echo "--- HTML files to be uploaded (html-files.txt) ---"
+          cat html-files.txt
+          echo "--- File format details ---"
+          file html-files.txt
+          
+          # 使用 -d 标志开启 Debug 模式执行上传
+          ./qshell qupload -c 10 -d qupload-html.json
 
           # --- 刷新 CDN 缓存 ---
           echo "Refreshing CDN cache for HTML files..."
-          find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
           sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://your-domain.com/" '{print domain$0}' > urls_to_refresh.txt
           
           echo "--- URLs to be refreshed ---"
