@@ -50,7 +50,7 @@ jobs:
           # --- 4. 核心修正：使用重定向解决 subshell 变量问题 ---
           echo "Refreshing CDN cache for HTML files..."
           
-          # 创建一个空的刷新列表文件
+          # 创建一个空的刷新列表文件1
           > urls_to_refresh.txt
 
           # 使用 < 重定向，避免 subshell 问题
