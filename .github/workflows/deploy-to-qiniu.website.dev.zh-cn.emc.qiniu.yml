@@ -1,70 +1,102 @@
-# 最终部署脚本 - 实现原子化上传
-
-name: Deploy Pre-built Website to Qiniu
+name: Deploy to Qiniu Cloud
 
 on:
   push:
     branches:
-      - main
+      - main # 或者你的部署分支
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Upload to Qiniu and Set Cache
+      # 如果你需要构建步骤 (例如 Next.js, Vue, React)
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: '18' # 指定你的 Node.js 版本
+      # - name: Install dependencies
+      #   run: npm install # 或者 yarn install, pnpm install
+      # - name: Build project
+      #   run: npm run build # 或者你的构建命令
+
+      - name: Download and Setup QShell
         run: |
-          # --- 准备工作 ---
-          echo "Downloading and setting up qshell..."
-          wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
-          tar -xvf qshell.tar.gz
-          chmod +x qshell
-          
-          # --- 配置账户 ---
-          echo "Configuring qshell account..."
-          ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
-          
-          # --- 第 1 步：上传除 HTML 外的所有资源文件 ---
-          echo "Step 1: Uploading assets (JS, CSS, etc.)..."
-          cat > qupload-assets.json << EOF
+          wget https://github.com/qiniu/qshell/releases/download/v2.11.1/qshell-v2.11.1-linux-amd64.tar.gz
+          tar -xvf qshell-v2.11.1-linux-amd64.tar.gz
+          sudo mv qshell-v2.11.1-linux-amd64/qshell /usr/local/bin/
+          qshell -v
+
+      - name: Configure Qiniu Account
+        env:
+          QINIU_AK: ${{ secrets.QINIU_AK }}
+          QINIU_SK: ${{ secrets.QINIU_SK }}
+        run: |
+          qshell account $QINIU_AK $QINIU_SK qshell_account
+
+      - name: Create QShell Upload Config
+        env:
+          QINIU_BUCKET_NAME: ${{ secrets.QINIU_BUCKET_NAME }}
+        run: |
+          cat > qshell_upload.json << EOF
           {
-              "src_dir": "docs",
-              "bucket": "emc-website-dev-zh-cn",
-              "overwrite": true,
-              "rescan_local": true,
-              "log_level": "warn",
-              "ignore_patterns": [
-                  "*.html"
-              ]
+              "src_dir": "out",
+              "bucket": "$QINIU_BUCKET_NAME",
+              "skip_file_prefixes": "assets, _next, images",
+              "overwrite": false,
+              "rescan_local": true
           }
           EOF
-          ./qshell qupload -c 10 qupload-assets.json
-
-          # --- 第 2 步：上传 HTML 入口文件 ---
-          echo "Step 2: Uploading HTML entry files..."
-          cat > qupload-html.json << EOF
+          
+          cat > qshell_upload_overwrite.json << EOF
           {
-              "src_dir": "docs",
-              "bucket": "emc-website-dev-zh-cn",
+              "src_dir": "out",
+              "bucket": "$QINIU_BUCKET_NAME",
+              "file_list": "files_to_overwrite.txt",
               "overwrite": true,
-              "rescan_local": true,
-              "log_level": "warn",
-              "file_list": "html-files.txt"
+              "rescan_local": true
           }
           EOF
-          # 生成一个只包含 html 文件的列表
-          find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
-          ./qshell qupload -c 10 qupload-html.json
 
-          # --- 第 3 步：为所有 HTML 文件设置缓存 ---
-          echo "Step 3: Setting 'no-cache' for all HTML files..."
-          BUCKET_NAME="emc-website-dev-zh-cn"
-          ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
-            echo "Setting 'Cache-Control: no-cache' for file: $key"
-            ./qshell chgm $BUCKET_NAME "$key" 'Cache-Control: no-cache'
-          done
+      - name: Upload Non-HTML/Icon Files (Incremental)
+        run: |
+          echo "--- Starting Incremental Upload ---"
+          qshell qupload qshell_upload.json
 
-          echo "Atomic deployment process completed successfully."
+      - name: Prepare list of files to overwrite
+        run: |
+          find out -type f -name "*.html" > files_to_overwrite.txt
+          find out -type f -name "favicon.ico" >> files_to_overwrite.txt
+          # 如果有其他需要覆盖的图标，继续添加，例如：
+          # find out -type f -name "apple-touch-icon.png" >> files_to_overwrite.txt
+          echo "--- Files to Overwrite ---"
+          cat files_to_overwrite.txt
+
+      - name: Upload HTML and Icon Files (Overwrite)
+        run: |
+          echo "--- Starting Overwrite Upload ---"
+          qshell qupload qshell_upload_overwrite.json
+
+      - name: Refresh CDN Cache
+        env:
+          QINIU_BUCKET_NAME: ${{ secrets.QINIU_BUCKET_NAME }}
+        run: |
+          # 从待覆盖文件列表中提取需要刷新的 URL
+          # 注意：这里的 sed 命令将 out/ 目录前缀去除，并为根目录的 index.html 生成 / 的刷新路径
+          # 你需要根据你的域名和文件结构进行调整
+          # 例如，如果你的文件都放在一个子目录，需要在这里处理
+          sed -e 's/^out\///' -e 's/index\.html$//' files_to_overwrite.txt > urls_to_refresh.txt
+          
+          # 如果根目录的 index.html 在列表中，确保刷新的是域名本身
+          # 这行命令将空行（代表根目录）替换为你的域名
+          # 请将 "https://your-domain.com/" 替换为你的真实域名
+          sed -i 's|^$|https://your-domain.com/|' urls_to_refresh.txt
+
+          echo "--- URLs to Refresh ---"
+          cat urls_to_refresh.txt
+          
+          # 执行刷新
+          # qshell cdnrefresh -i urls_to_refresh.txt
+          echo "CDN refresh step is ready. Uncomment 'qshell cdnrefresh' to enable it."
