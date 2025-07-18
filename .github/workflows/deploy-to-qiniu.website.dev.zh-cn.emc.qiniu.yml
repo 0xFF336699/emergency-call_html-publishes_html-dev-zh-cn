@@ -1,4 +1,4 @@
-# 最终混合方案 v5：使用 ignore_patterns 忽略非 HTML 文件
+# 最终混合方案 v6：反向忽略非 HTML 文件
 name: Deploy HTML to Qiniu (Assets via GitHub Pages)
 
 on:
@@ -28,8 +28,16 @@ jobs:
           echo "Configuring qshell account..."
           ./qshell account $QINIU_ACCESS_KEY $QINIU_SECRET_KEY deploy_user
 
-          # --- 上传 HTML 文件 (通过忽略其他所有已知类型) ---
-          echo "Uploading only HTML files by ignoring all other types..."
+          # --- 核心步骤：生成一个包含所有非 HTML 文件的忽略列表 ---
+          echo "Generating ignore list for non-HTML files..."
+          # 注意这里的 -not -name "*.html"，它会查找所有不是 .html 的文件
+          find docs -type f -not -name "*.html" | sed 's/docs\///' > non-html-files.txt
+          
+          echo "--- Files to be ignored by qshell ---"
+          cat non-html-files.txt
+
+          # --- 上传文件，同时忽略列表中的所有文件 ---
+          echo "Uploading all files from 'docs' while ignoring the list..."
           cat > qupload-html.json << EOF
           {
               "src_dir": "docs",
@@ -37,12 +45,7 @@ jobs:
               "overwrite": true,
               "rescan_local": true,
               "log_level": "info",
-              "ignore_patterns": [
-                  "*.js", "*.css", "*.png", "*.jpg", "*.jpeg",
-                  "*.gif", "*.svg", "*.webp", "*.ico", "*.json",
-                  "*.txt", "*.md", "*.xml", "*.woff", "*.woff2",
-                  "*.ttf", "*.eot"
-              ]
+              "skip_file_prefixes": "non-html-files.txt"
           }
           EOF
           
