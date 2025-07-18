@@ -1,5 +1,5 @@
-# 最终部署脚本 - 实现增量与原子化上传
-name: Deploy Website to Qiniu (Incremental)
+# 最终部署脚本 - 实现基于内容Hash的精准增量上传
+name: Deploy Website to Qiniu (Content-based Incremental)
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
 
       - name: Upload to Qiniu and Set Cache
         env:
-          QINIU_BUCKET_NAME: ${{ secrets.QINIU_BUCKET_NAME }} # 从 Secrets 读取 Bucket 名称
+          QINIU_BUCKET_NAME: ${{ secrets.QINIU_BUCKET_NAME }}
           QINIU_ACCESS_KEY: ${{ secrets.QINIU_ACCESS_KEY }}
           QINIU_SECRET_KEY: ${{ secrets.QINIU_SECRET_KEY }}
         run: |
@@ -30,13 +30,14 @@ jobs:
           echo "Configuring qshell account..."
           ./qshell account $QINIU_ACCESS_KEY $QINIU_SECRET_KEY deploy_user
           
-          # --- 第 1 步：增量上传除 HTML 外的所有资源文件 ---
-          echo "Step 1: Incrementally uploading assets (JS, CSS, etc.)..."
+          # --- 第 1 步：基于文件内容Hash，增量上传所有资源文件 ---
+          echo "Step 1: Incrementally uploading assets based on content hash..."
           cat > qupload-assets.json << EOF
           {
               "src_dir": "docs",
               "bucket": "$QINIU_BUCKET_NAME",
               "overwrite": false,
+              "check_hash": true,
               "rescan_local": true,
               "log_level": "warn",
               "ignore_patterns": [
@@ -46,7 +47,7 @@ jobs:
           EOF
           ./qshell qupload -c 10 qupload-assets.json
 
-          # --- 第 2 步：覆盖上传 HTML 入口文件 ---
+          # --- 第 2 步：覆盖上传 HTML 入口文件 (这一步逻辑不变) ---
           echo "Step 2: Overwriting HTML entry files..."
           cat > qupload-html.json << EOF
           {
@@ -58,16 +59,14 @@ jobs:
               "file_list": "html-files.txt"
           }
           EOF
-          # 生成一个只包含 html 文件的列表
           find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
           ./qshell qupload -c 10 qupload-html.json
 
-          # --- 第 3 步：为所有 HTML 文件设置缓存策略 ---
+          # --- 第 3 步：为所有 HTML 文件设置缓存策略 (这一步逻辑不变) ---
           echo "Step 3: Setting 'no-cache' for all HTML files..."
-          # 从 html-files.txt 读取列表，比 listbucket 更���更准
           cat html-files.txt | while read key; do
             echo "Setting 'Cache-Control: no-cache' for file: $key"
             ./qshell chgm $QINIU_BUCKET_NAME "$key" 'Cache-Control: no-cache'
           done
 
-          echo "Incremental and atomic deployment process completed successfully."
+          echo "Content-based incremental deployment completed successfully."
