@@ -67,7 +67,7 @@ jobs:
           # 从原始目录查找 HTML，生成刷新列表
           find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
           # 使用 QINIU_DOMAIN 这个 Secret 来构建 URL
-          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="$QINIU_DOMAIN" '{print domain$0}' > urls_to_refresh.txt
+          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://emc-website-dev-zh-cn.qiniu.fanfanlo.com/" '{print domain$0}' > urls_to_refresh.txt
           
           echo "--- URLs to be refreshed ---"
           cat urls_to_refresh.txt
