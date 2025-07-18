@@ -2070,7 +2070,7 @@ function Content() {
         },
         children: [
             /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-                children: "v1"
+                children: "v2 2025-07-18_19-57-20"
             }),
             /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
                 variant: "contained",
@@ -2107,4 +2107,4 @@ function Home() {
 /***/ })
 
 }]);
-//# sourceMappingURL=62-92c2b460ee10080c.js.map
+//# sourceMappingURL=62-7b9b5841215e2d22.js.map
