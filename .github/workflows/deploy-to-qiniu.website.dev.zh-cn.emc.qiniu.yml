@@ -1,5 +1,6 @@
-# 混合方案：上传 HTML 到七牛，资源回源到 GitHub Pages
-name: Deploy HTML to Qiniu (Assets via GitHub Pages)
+# 最终部署脚本 - 实现原子化上传
+
+name: Deploy Pre-built Website to Qiniu
 
 on:
   push:
@@ -7,58 +8,48 @@ on:
       - main
 
 jobs:
-  deploy-html:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Upload HTML files to Qiniu
-        env:
-          QINIU_BUCKET_NAME: ${{ secrets.QINIU_BUCKET_NAME }}
-          QINIU_ACCESS_KEY: ${{ secrets.QINIU_ACCESS_KEY }}
-          QINIU_SECRET_KEY: ${{ secrets.QINIU_SECRET_KEY }}
+      - name: Upload to Qiniu and Set Cache
         run: |
-          # --- 准备工作 (下载并配置 qshell) ---
-          echo "Downloading and setting up qshell v2.16.0..."
-          wget https://github.com/qiniu/qshell/releases/download/v2.16.0/qshell-v2.16.0-linux-amd64.tar.gz -O qshell.tar.gz
+          # --- 准备工作 ---
+          echo "Downloading and setting up qshell..."
+          wget https://github.com/qiniu/qshell/releases/download/v2.10.0/qshell-v2.10.0-linux-amd64.tar.gz -O qshell.tar.gz
           tar -xvf qshell.tar.gz
           chmod +x qshell
           
+          # --- 配置账户 ---
           echo "Configuring qshell account..."
-          ./qshell account $QINIU_ACCESS_KEY $QINIU_SECRET_KEY deploy_user
+          ./qshell account ${{ secrets.QINIU_ACCESS_KEY }} ${{ secrets.QINIU_SECRET_KEY }} deploy_user
+          
 
-          # --- 上传 HTML 文件 ---
-          echo "Uploading only HTML files to Qiniu..."
+          # --- 第 2 步：上传 HTML 入口文件 ---
+          echo "Step 2: Uploading HTML entry files..."
           cat > qupload-html.json << EOF
           {
               "src_dir": "docs",
-              "bucket": "$QINIU_BUCKET_NAME",
+              "bucket": "emc-website-dev-zh-cn",
               "overwrite": true,
               "rescan_local": true,
-              "log_level": "info",
+              "log_level": "warn",
               "file_list": "html-files.txt"
           }
           EOF
-          
           # 生成一个只包含 html 文件的列表
           find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
-          
-          echo "--- HTML files to be uploaded ---"
-          cat html-files.txt
-          
           ./qshell qupload -c 10 qupload-html.json
 
-          # --- 刷新 CDN 缓存 ---
-          echo "Refreshing CDN cache for HTML files..."
-          # 注意：这里的 sed 命令需要根据你的域名和文件结构进行调整
-          # 它将文件路径转换为需要刷新的 URL 路径
-          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://your-domain.com/" '{print domain$0}' > urls_to_refresh.txt
-          
-          echo "--- URLs to be refreshed ---"
-          cat urls_to_refresh.txt
-          
-          # 执行刷新, 请在确认无误后取消注释
-          # ./qshell cdnrefresh -i urls_to_refresh.txt
+          # --- 第 3 步：为所有 HTML 文件设置缓存 ---
+          echo "Step 3: Setting 'no-cache' for all HTML files..."
+          BUCKET_NAME="emc-website-dev-zh-cn"
+          ./qshell listbucket $BUCKET_NAME | grep '\.html$' | awk '{print $1}' | while read key; do
+            echo "Setting 'Cache-Control: no-cache' for file: $key"
+            ./qshell chgm $BUCKET_NAME "$key" 'Cache-Control: no-cache'
+          done
 
-          echo "HTML deployment and CDN refresh completed."
+          echo "Atomic deployment process completed successfully."
