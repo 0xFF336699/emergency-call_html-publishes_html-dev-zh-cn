@@ -1,4 +1,4 @@
-# 最终方案 v11：全面刷新带与不带斜杠的 URL
+# 最终方案 v12：修正 CDN 刷新 URL，确保包含域名
 name: Deploy ONLY HTML to Qiniu
 
 on:
@@ -47,8 +47,8 @@ jobs:
           EOF
           ./qshell qupload -c 10 qupload-html.json
 
-          # --- 4. 核心修改：刷新 CDN 缓存 (带与不带斜杠) ---
-          echo "Refreshing CDN cache for HTML files (with and without trailing slash)..."
+          # --- 4. 核心修正：在生成刷新列表时，重新加入域名 ---
+          echo "Refreshing CDN cache for HTML files..."
           find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
           
           # 创建一个空的刷新列表文件
@@ -56,35 +56,34 @@ jobs:
 
           # 循环处理每个html文件
           cat html-files.txt | while read -r filepath; do
-            # 去掉 index.html
             path_no_index=$(echo "$filepath" | sed 's/index\.html$//')
-            # 去掉 .html 后缀
             path_no_ext=$(echo "$path_no_index" | sed 's/\.html$//')
             
-            # 生成带斜杠的 URL (如果不是根目录)
-            if [ -n "$path_no_index" ] && [ "${path_no_index: -1}" == "/" ]; then
-              echo "$QINIU_DOMAIN$path_no_index" >> urls_to_refresh.txt
+            # 生成带斜杠的 URL (目录)
+            if [ "${path_no_index: -1}" == "/" ]; then
+              echo "${QINIU_DOMAIN}${path_no_index}" >> urls_to_refresh.txt
             fi
-
-            # 生成不带斜杠的 URL
-            if [ "$path_no_ext" != "$path_no_index" ] || [ -z "$path_no_index" ]; then
-               # 如果路径是根目录，或者路径末尾不是斜杠，则添加不带斜杠的版本
-               if [ -n "$path_no_ext" ]; then
-                  echo "$QINIU_DOMAIN$path_no_ext" >> urls_to_refresh.txt
-               else
-                  # 处理根目录 index.html 的情况
-                  echo "$QINIU_DOMAIN" >> urls_to_refresh.txt
-               fi
+            
+            # 生成不带斜杠的 URL (文件或目录的别名)
+            # 确保不重复添加
+            if [ "$path_no_ext" != "$path_no_index" ]; then
+               echo "${QINIU_DOMAIN}${path_no_ext}" >> urls_to_refresh.txt
             fi
           done
           
-          # 去重，防止重复刷新
+          # 单独处理根目录的 index.html
+          if grep -q "^index.html$" html-files.txt; then
+            echo "$QINIU_DOMAIN" >> urls_to_refresh.txt
+          fi
+
+          # 去重
           sort -u urls_to_refresh.txt -o urls_to_refresh.txt
 
           echo "--- URLs to be refreshed ---"
           cat urls_to_refresh.txt
           
-          # 执行刷新, 请在确认无误后取消注释
-          # ./qshell cdnrefresh -i urls_to_refresh.txt
+          # 启用刷新!
+          echo "Executing CDN refresh..."
+          ./qshell cdnrefresh -i urls_to_refresh.txt
 
           echo "HTML-only deployment completed successfully."
