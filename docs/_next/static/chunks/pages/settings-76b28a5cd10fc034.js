@@ -544,6 +544,7 @@ export const [MarketPageDataContextProvider, useMarketPageData] = createTypedCon
 function createAsyncContextLoader(options) {
     const { Provider, extract, fallback = null } = options;
     function AsyncContextLoaderInner(props) {
+        console.log('AsyncContextLoaderInner promise:', props.value);
         const raw = (0,react.use)(props.value);
         const contextValue = extract(raw);
         return /*#__PURE__*/ (0,jsx_runtime.jsx)(Provider, {
@@ -892,4 +893,4 @@ function TabbarContainer(param) {
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=settings-c0792a6ca0978605.js.map
+//# sourceMappingURL=settings-76b28a5cd10fc034.js.map
