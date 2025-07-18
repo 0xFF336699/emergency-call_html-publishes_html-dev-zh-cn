@@ -55,7 +55,7 @@ jobs:
 
           # --- 刷新 CDN 缓存 ---
           echo "Refreshing CDN cache for HTML files..."
-          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://your-domain.com/" '{print domain$0}' > urls_to_refresh.txt
+          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://emc-website-dev-zh-cn.qiniu.fanfanlo.com/" '{print domain$0}' > urls_to_refresh.txt
           
           echo "--- URLs to be refreshed ---"
           cat urls_to_refresh.txt
