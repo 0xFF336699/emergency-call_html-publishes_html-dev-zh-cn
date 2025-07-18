@@ -1,4 +1,4 @@
-# 最终方案 v12：修正 CDN 刷新 URL，确保包含域名
+# 最终方案 v13：修正 subshell 环境变量问题
 name: Deploy ONLY HTML to Qiniu
 
 on:
@@ -47,15 +47,14 @@ jobs:
           EOF
           ./qshell qupload -c 10 qupload-html.json
 
-          # --- 4. 核心修正：在生成刷新列表时，重新加入域名 ---
+          # --- 4. 核心修正：使用重定向解决 subshell 变量问题 ---
           echo "Refreshing CDN cache for HTML files..."
-          find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
           
           # 创建一个空的刷新列表文件
           > urls_to_refresh.txt
 
-          # 循环处理每个html文件
-          cat html-files.txt | while read -r filepath; do
+          # 使用 < 重定向，避免 subshell 问题
+          while read -r filepath; do
             path_no_index=$(echo "$filepath" | sed 's/index\.html$//')
             path_no_ext=$(echo "$path_no_index" | sed 's/\.html$//')
             
@@ -65,14 +64,13 @@ jobs:
             fi
             
             # 生成不带斜杠的 URL (文件或目录的别名)
-            # 确保不重复添加
             if [ "$path_no_ext" != "$path_no_index" ]; then
                echo "${QINIU_DOMAIN}${path_no_ext}" >> urls_to_refresh.txt
             fi
-          done
+          done < <(find docs -type f -name "*.html" | sed 's/docs\///') # 使用进程替换和重定向
           
           # 单独处理根目录的 index.html
-          if grep -q "^index.html$" html-files.txt; then
+          if grep -q "^index.html$" <(find docs -type f -name "*.html" | sed 's/docs\///'); then
             echo "$QINIU_DOMAIN" >> urls_to_refresh.txt
           fi
 
