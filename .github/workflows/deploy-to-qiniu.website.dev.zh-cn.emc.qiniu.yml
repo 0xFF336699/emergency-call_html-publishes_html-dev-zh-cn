@@ -1,4 +1,4 @@
-# 最终方案 v13：修正 subshell 环境变量问题
+# 最终方案 v14：简化并强化根域名刷新逻辑
 name: Deploy ONLY HTML to Qiniu
 
 on:
@@ -47,10 +47,10 @@ jobs:
           EOF
           ./qshell qupload -c 10 qupload-html.json
 
-          # --- 4. 核心修正：使用重定向解决 subshell 变量问题 ---
+          # --- 4. 核心修正：简化根域名的刷新逻辑 ---
           echo "Refreshing CDN cache for HTML files..."
           
-          # 创建一个空的刷新列表文件1
+          # 创建一个空的刷新列表文件
           > urls_to_refresh.txt
 
           # 使用 < 重定向，避免 subshell 问题
@@ -67,10 +67,11 @@ jobs:
             if [ "$path_no_ext" != "$path_no_index" ]; then
                echo "${QINIU_DOMAIN}${path_no_ext}" >> urls_to_refresh.txt
             fi
-          done < <(find docs -type f -name "*.html" | sed 's/docs\///') # 使用进程替换和重定向
+          done < <(find docs -type f -name "*.html" | sed 's/docs\///')
           
-          # 单独处理根目录的 index.html
-          if grep -q "^index.html$" <(find docs -type f -name "*.html" | sed 's/docs\///'); then
+          # --- 最重要的修正：无条件地刷新根域名 ---
+          # 只要根目录的 index.html 存在，就刷新根域名
+          if [ -f "docs/index.html" ]; then
             echo "$QINIU_DOMAIN" >> urls_to_refresh.txt
           fi
 
