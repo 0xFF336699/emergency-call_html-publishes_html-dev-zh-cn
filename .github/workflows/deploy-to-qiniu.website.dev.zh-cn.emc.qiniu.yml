@@ -24,9 +24,11 @@ jobs:
 
       - name: Download and Setup QShell
         run: |
-          wget https://github.com/qiniu/qshell/releases/download/v2.11.1/qshell-v2.11.1-linux-amd64.tar.gz
-          tar -xvf qshell-v2.11.1-linux-amd64.tar.gz
-          sudo mv qshell-v2.11.1-linux-amd64/qshell /usr/local/bin/
+          # --- 已更新为最新的 v2.16.0 版本 ---
+          wget https://github.com/qiniu/qshell/releases/download/v2.16.0/qshell-v2.16.0-linux-amd64.tar.gz
+          tar -xvf qshell-v2.16.0-linux-amd64.tar.gz
+          # --- 文件名也相应更新 ---
+          sudo mv qshell-v2.16.0-linux-amd64/qshell /usr/local/bin/
           qshell -v
 
       - name: Configure Qiniu Account
@@ -44,7 +46,6 @@ jobs:
           {
               "src_dir": "out",
               "bucket": "$QINIU_BUCKET_NAME",
-              "skip_file_prefixes": "assets, _next, images",
               "overwrite": false,
               "rescan_local": true
           }
