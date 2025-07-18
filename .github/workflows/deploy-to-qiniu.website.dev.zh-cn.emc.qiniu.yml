@@ -1,4 +1,4 @@
-# 混合方案 v2：使用 include_patterns 精确上传 HTML
+# 混合方案 v3：使用双重保险模式精确上传 HTML
 name: Deploy HTML to Qiniu (Assets via GitHub Pages)
 
 on:
@@ -28,8 +28,8 @@ jobs:
           echo "Configuring qshell account..."
           ./qshell account $QINIU_ACCESS_KEY $QINIU_SECRET_KEY deploy_user
 
-          # --- 上传 HTML 文件 (使用 include_patterns) ---
-          echo "Uploading only HTML files to Qiniu using include_patterns..."
+          # --- 上传 HTML 文件 (使用双重保险) ---
+          echo "Uploading only HTML files to Qiniu using double insurance..."
           cat > qupload-html.json << EOF
           {
               "src_dir": "docs",
@@ -37,6 +37,20 @@ jobs:
               "overwrite": true,
               "rescan_local": true,
               "log_level": "info",
+              "ignore_patterns": [
+                  "*.js",
+                  "*.css",
+                  "*.png",
+                  "*.jpg",
+                  "*.jpeg",
+                  "*.gif",
+                  "*.svg",
+                  "*.webp",
+                  "*.ico",
+                  "*.json",
+                  "*.txt",
+                  "*.md"
+              ],
               "include_patterns": [
                   "*.html"
               ]
@@ -47,14 +61,13 @@ jobs:
 
           # --- 刷新 CDN 缓存 ---
           echo "Refreshing CDN cache for HTML files..."
-          # 我们仍然需要一个文件列表来生成刷新URL
           find docs -type f -name "*.html" | sed 's/docs\///' > html-files.txt
-          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://emc-website-dev-zh-cn.qiniu.fanfanlo.com/" '{print domain$0}' > urls_to_refresh.txt
+          sed -e 's/index\.html$//' -e 's/\.html$//' html-files.txt | awk -v domain="https://your-domain.com/" '{print domain$0}' > urls_to_refresh.txt
           
           echo "--- URLs to be refreshed ---"
           cat urls_to_refresh.txt
           
           # 执行刷新, 请在确认无误后取消注释
-           ./qshell cdnrefresh -i urls_to_refresh.txt
+          # ./qshell cdnrefresh -i urls_to_refresh.txt
 
           echo "HTML deployment and CDN refresh completed."
