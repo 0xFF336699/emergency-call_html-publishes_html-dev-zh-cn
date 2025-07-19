@@ -622,6 +622,9 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
+                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
+                    children: "2025-07-19_08-20-02"
+                }),
                 children
             ]
         })
@@ -718,4 +721,4 @@ function PrivacySettingsPage() {
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=privacy-ba230f17fc4840a8.js.map
+//# sourceMappingURL=privacy-a849fba30a7b06dd.js.map

@@ -1,4 +1,4 @@
-(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([[417],{
+(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([[400],{
 
 /***/ 1563:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
@@ -288,13 +288,13 @@ function AppbarContainer(props) {
 
 /***/ }),
 
-/***/ 1575:
+/***/ 39272:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ MemberManagementPage)
+/* harmony export */   "default": () => (/* binding */ RoomPage)
 /* harmony export */ });
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94513);
 /* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(75640);
@@ -310,9 +310,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function MemberManagementPage() {
-    console.log('MemberManagementPage');
-    const { t } = (0,_fanfanlo__WEBPACK_IMPORTED_MODULE_4__/* .useTranslation */ .Bd)("homepage/pages/im/room/room-settings/member/content");
+function RoomPage() {
+    const { t } = (0,_fanfanlo__WEBPACK_IMPORTED_MODULE_4__/* .useTranslation */ .Bd)("homepage/pages/im/room/room-settings/content");
     const router = (0,next_router__WEBPACK_IMPORTED_MODULE_1__.useRouter)();
     const { id: roomId } = router.query;
     (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(()=>{
@@ -331,28 +330,13 @@ function MemberManagementPage() {
                 title: t("content.title"),
                 back: true
             },
-            children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_im_matrix__WEBPACK_IMPORTED_MODULE_3__/* .MemberManagementContent */ .hi, {
+            children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_im_matrix__WEBPACK_IMPORTED_MODULE_3__/* .RoomSettingsContent */ .YH, {
                 roomId: roomId
             })
         })
     });
 }
 
-
-/***/ }),
-
-/***/ 16376:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-    (window.__NEXT_P = window.__NEXT_P || []).push([
-      "/im/room/room-settings/member",
-      function () {
-        return __webpack_require__(1575);
-      }
-    ]);
-    if(false) {}
-  
 
 /***/ }),
 
@@ -690,6 +674,9 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
+                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
+                    children: "2025-07-19_08-20-02"
+                }),
                 children
             ]
         })
@@ -709,14 +696,29 @@ function AndroidPageContent(param) {
 }
 
 
+/***/ }),
+
+/***/ 96504:
+/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+
+
+    (window.__NEXT_P = window.__NEXT_P || []).push([
+      "/im/room/room-settings",
+      function () {
+        return __webpack_require__(39272);
+      }
+    ]);
+    if(false) {}
+  
+
 /***/ })
 
 },
 /******/ __webpack_require__ => { // webpackRuntimeModules
 /******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, [299,893,636,593,792], () => (__webpack_exec__(16376)));
+/******/ __webpack_require__.O(0, [299,893,636,593,792], () => (__webpack_exec__(96504)));
 /******/ var __webpack_exports__ = __webpack_require__.O();
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=member-3f11996b36a05cdd.js.map
+//# sourceMappingURL=room-settings-cd03bc36b16ab528.js.map

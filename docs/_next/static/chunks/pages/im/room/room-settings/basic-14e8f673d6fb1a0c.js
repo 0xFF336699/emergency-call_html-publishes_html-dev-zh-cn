@@ -1,4 +1,4 @@
-(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([[105],{
+(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([[31],{
 
 /***/ 1563:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
@@ -288,21 +288,6 @@ function AppbarContainer(props) {
 
 /***/ }),
 
-/***/ 9052:
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-
-    (window.__NEXT_P = window.__NEXT_P || []).push([
-      "/im/room/room-settings/member-detail",
-      function () {
-        return __webpack_require__(55917);
-      }
-    ]);
-    if(false) {}
-  
-
-/***/ }),
-
 /***/ 43173:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
@@ -539,13 +524,28 @@ function AppShell(param) {
 
 /***/ }),
 
-/***/ 55917:
+/***/ 45648:
+/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+
+
+    (window.__NEXT_P = window.__NEXT_P || []).push([
+      "/im/room/room-settings/basic",
+      function () {
+        return __webpack_require__(47947);
+      }
+    ]);
+    if(false) {}
+  
+
+/***/ }),
+
+/***/ 47947:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ MemberDetailPage)
+/* harmony export */   "default": () => (/* binding */ BasicSettingsPage)
 /* harmony export */ });
 /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94513);
 /* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(75640);
@@ -561,28 +561,28 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function MemberDetailPage() {
-    const { t } = (0,_fanfanlo__WEBPACK_IMPORTED_MODULE_4__/* .useTranslation */ .Bd)('homepage/pages/im/room/room-settings/member-detail/content');
+function BasicSettingsPage() {
+    const { t } = (0,_fanfanlo__WEBPACK_IMPORTED_MODULE_4__/* .useTranslation */ .Bd)("homepage/pages/im/room/room-settings/basic/content");
     const router = (0,next_router__WEBPACK_IMPORTED_MODULE_1__.useRouter)();
-    const { roomId, userId } = router.query;
+    const { id: roomId } = router.query;
     (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(()=>{
-        if ((!roomId || !userId) && router.isReady) {
+        // 如果没有roomId，重定向到聊天列表
+        if (!roomId && router.isReady) {
             router.push('/im');
         }
     }, [
         roomId,
-        userId,
         router
     ]);
+    console.log('title=', t("content.title"));
     return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_app_ui__WEBPACK_IMPORTED_MODULE_5__/* .AppShell */ .G, {
         children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_app_ui__WEBPACK_IMPORTED_MODULE_6__/* .AppbarContainer */ .W, {
             appbarProps: {
-                title: t('content.title'),
+                title: t("content.title"),
                 back: true
             },
-            children: roomId && userId && /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_im_matrix__WEBPACK_IMPORTED_MODULE_3__/* .MemberDetailContent */ .rO, {
-                roomId: roomId,
-                userId: userId
+            children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_im_matrix__WEBPACK_IMPORTED_MODULE_3__/* .BasicSettingsContent */ .Vq, {
+                roomId: roomId
             })
         })
     });
@@ -689,6 +689,9 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
+                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
+                    children: "2025-07-19_08-20-02"
+                }),
                 children
             ]
         })
@@ -713,9 +716,9 @@ function AndroidPageContent(param) {
 },
 /******/ __webpack_require__ => { // webpackRuntimeModules
 /******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, [299,893,636,593,792], () => (__webpack_exec__(9052)));
+/******/ __webpack_require__.O(0, [299,893,636,593,792], () => (__webpack_exec__(45648)));
 /******/ var __webpack_exports__ = __webpack_require__.O();
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=member-detail-fe689cf4474c9fbc.js.map
+//# sourceMappingURL=basic-14e8f673d6fb1a0c.js.map
