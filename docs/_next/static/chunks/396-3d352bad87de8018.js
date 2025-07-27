@@ -1460,7 +1460,7 @@ function InviteContactDialog(param) {
         setIsTypesLoading(false);
         if (res.err || !res.shellIsOk || !res.dataIsOk) {
             var _res_err;
-            const errorMessage = ((_res_err = res.err) === null || _res_err === void 0 ? void 0 : _res_err.message) || 'Failed to load call types.';
+            const errorMessage = ((_res_err = res.err) === null || _res_err === void 0 ? void 0 : _res_err.message) || '加载呼叫类型失败。';
             dist/* default */.Ay.error(errorMessage);
             setAvailableCallTypes([]);
             logger.error('Failed to load call types:', errorMessage);
@@ -1507,7 +1507,7 @@ function InviteContactDialog(param) {
         var _matrixUser_userData_userInfo_loginResponse;
         const contactInputs = contacts.split('\n').map((c)=>c.trim()).filter((c)=>c);
         if (contactInputs.length === 0) {
-            dist/* default */.Ay.error('Please enter at least one contact.');
+            dist/* default */.Ay.error('请输入至少一个联系人。');
             return;
         }
         const contactIdentities = [];
@@ -1519,12 +1519,12 @@ function InviteContactDialog(param) {
                     identityType: type
                 });
             } else {
-                dist/* default */.Ay.error("Invalid contact format: ".concat(input, ". Must be an 11-digit number or a 32-character string."));
+                dist/* default */.Ay.error("联系人格式无效: ".concat(input, "。必须是11位手机号或32位字符串。"));
                 return;
             }
         }
         if (!callType || callType.trim() === '') {
-            dist/* default */.Ay.error('Please select or enter a call type.');
+            dist/* default */.Ay.error('请选择或输入一个呼叫类型。');
             return;
         }
         setIsLoading(true);
@@ -1552,7 +1552,7 @@ function InviteContactDialog(param) {
             };
             executeApiCall(apiParams);
         } else {
-            (0,dist/* default */.Ay)('Waiting for Matrix to log in...');
+            (0,dist/* default */.Ay)('等待登录...');
             setPendingParams(params);
         }
     }, [
@@ -1570,7 +1570,7 @@ function InviteContactDialog(param) {
         fullWidth: true,
         children: [
             /*#__PURE__*/ (0,jsx_runtime.jsx)(DialogTitle/* default */.A, {
-                children: "Invite Emergency Contact"
+                children: "邀请紧急联系人"
             }),
             /*#__PURE__*/ (0,jsx_runtime.jsx)(DialogContent/* default */.A, {
                 children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
@@ -1583,7 +1583,7 @@ function InviteContactDialog(param) {
                             autoFocus: true,
                             margin: "dense",
                             id: "contacts",
-                            label: "Contacts (11-digit number or 32-char ID)",
+                            label: "联系人 (11位手机号或32位ID)",
                             type: "text",
                             fullWidth: true,
                             multiline: true,
@@ -1597,7 +1597,7 @@ function InviteContactDialog(param) {
                         /*#__PURE__*/ (0,jsx_runtime.jsx)(TextField/* default */.A, {
                             margin: "dense",
                             id: "remark",
-                            label: "Remark Name (Optional)",
+                            label: "备注名 (可选)",
                             type: "text",
                             fullWidth: true,
                             variant: "outlined",
@@ -1632,7 +1632,7 @@ function InviteContactDialog(param) {
                             },
                             renderInput: (params)=>/*#__PURE__*/ (0,jsx_runtime.jsx)(TextField/* default */.A, {
                                     ...params,
-                                    label: "Call Type",
+                                    label: "呼叫类型",
                                     variant: "outlined",
                                     fullWidth: true,
                                     InputProps: {
@@ -1658,13 +1658,13 @@ function InviteContactDialog(param) {
                         /*#__PURE__*/ (0,jsx_runtime.jsx)(TextField/* default */.A, {
                             margin: "dense",
                             id: "message",
-                            label: "Invitation Message (Optional)",
+                            label: "邀请信息 (可选)",
                             type: "text",
                             fullWidth: true,
                             multiline: true,
                             rows: 3,
                             variant: "outlined",
-                            placeholder: "I've added you as my emergency contact. Please accept the invitation.",
+                            placeholder: "我已将您添加为我的紧急联系人，请接受邀请。",
                             value: message,
                             onChange: (e)=>setMessage(e.target.value),
                             disabled: isLoading
@@ -1677,7 +1677,7 @@ function InviteContactDialog(param) {
                     /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
                         onClick: ()=>onClose(),
                         disabled: isLoading,
-                        children: "Close"
+                        children: "关闭"
                     }),
                     /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
                         onClick: handleSendInvitation,
@@ -1685,7 +1685,7 @@ function InviteContactDialog(param) {
                         disabled: isLoading,
                         children: isLoading ? /*#__PURE__*/ (0,jsx_runtime.jsx)(CircularProgress/* default */.A, {
                             size: 24
-                        }) : 'Send Invitation'
+                        }) : '发送邀请'
                     })
                 ]
             })
@@ -1713,15 +1713,15 @@ function JpushIsInitialized() {
     return /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
         children: [
             /*#__PURE__*/ (0,jsx_runtime.jsx)("span", {
-                children: "jpush initialized:"
+                children: "消息推送初始:"
             }),
             /*#__PURE__*/ (0,jsx_runtime.jsx)("span", {
-                children: isInitialized ? "yes" : "no"
+                children: isInitialized ? "是" : "否"
             }),
             /*#__PURE__*/ (0,jsx_runtime.jsx)("span", {
                 children: /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
                     onClick: refresh,
-                    children: "refresh"
+                    children: "刷新"
                 })
             })
         ]
@@ -1892,17 +1892,17 @@ const SensorMonitor = ()=>{
     const handleSetThreshold = ()=>{
         const thresholdValue = parseFloat(threshold);
         if (isNaN(thresholdValue)) {
-            alert('Please enter a valid number for the threshold.');
+            alert('请输入一个有效的数字作为阈值。');
             return;
         }
         try {
             // This script now ONLY updates the threshold.
             const script = "com.fanfanlo.emergencycall.manager.SensorManager.updateThreshold(".concat(thresholdValue, ");");
             AutoWebViewJs/* autoWebViewJs */.yx.callScript(script);
-            alert("Threshold set to: ".concat(thresholdValue));
+            alert("阈值已设置为: ".concat(thresholdValue));
         } catch (error) {
             console.error('Error calling updateThreshold:', error);
-            alert('Failed to set threshold. Make sure you are in the Android app.');
+            alert('设置阈值失败。请确保您在安卓应用中。');
         }
     };
     const handleToggleMonitoring = ()=>{
@@ -1918,7 +1918,7 @@ const SensorMonitor = ()=>{
             }
         } catch (error) {
             console.error('Error toggling monitoring:', error);
-            alert('Failed to toggle monitoring. Make sure you are in the Android app.');
+            alert('切换监控状态失败。请确保您在安卓应用中。');
         }
     };
     return /*#__PURE__*/ (0,jsx_runtime.jsxs)(Paper/* default */.A, {
@@ -1931,7 +1931,7 @@ const SensorMonitor = ()=>{
             /*#__PURE__*/ (0,jsx_runtime.jsx)(Typography/* default */.A, {
                 variant: "h6",
                 gutterBottom: true,
-                children: "Sensor Monitoring Control"
+                children: "传感器监控控制"
             }),
             /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
                 sx: {
@@ -1942,7 +1942,7 @@ const SensorMonitor = ()=>{
                 },
                 children: [
                     /*#__PURE__*/ (0,jsx_runtime.jsx)(TextField/* default */.A, {
-                        label: "Vibration Threshold",
+                        label: "震动阈值",
                         variant: "outlined",
                         type: "number",
                         value: threshold,
@@ -1952,7 +1952,7 @@ const SensorMonitor = ()=>{
                     /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
                         variant: "contained",
                         onClick: handleSetThreshold,
-                        children: "Set"
+                        children: "设置"
                     })
                 ]
             }),
@@ -1961,7 +1961,7 @@ const SensorMonitor = ()=>{
                 color: isMonitoring ? 'error' : 'primary',
                 onClick: handleToggleMonitoring,
                 fullWidth: true,
-                children: isMonitoring ? 'Stop Monitoring' : 'Start Monitoring'
+                children: isMonitoring ? '停止监控' : '开始监控'
             })
         ]
     });
@@ -1978,10 +1978,13 @@ function TestEmergencyCall() {
         AutoWebViewJs/* autoWebViewJs */.yx.callScript(script);
     }
     return /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-        sx: {},
+        sx: {
+            mt: "10px",
+            mb: "10px"
+        },
         children: /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
             onClick: onClick,
-            children: "TestEmergencyCall"
+            children: "测试医疗呼救"
         })
     });
 }
@@ -2013,15 +2016,12 @@ function Content() {
             /*#__PURE__*/ (0,jsx_runtime.jsx)(ListenShowPrivacyContent, {
                 type: "main"
             }),
-            /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-                children: "v3 2025-07-19_08-14-00"
-            }),
             /*#__PURE__*/ (0,jsx_runtime.jsx)(JpushIsInitialized, {}),
             /*#__PURE__*/ (0,jsx_runtime.jsx)(TestEmergencyCall, {}),
             /*#__PURE__*/ (0,jsx_runtime.jsx)(Button/* default */.A, {
                 variant: "contained",
                 onClick: ()=>setOpenInviteDialog(true),
-                children: "Invite Contact"
+                children: "邀请紧急联系人"
             }),
             /*#__PURE__*/ (0,jsx_runtime.jsx)(SensorMonitor, {}),
             openInviteDialog && /*#__PURE__*/ (0,jsx_runtime.jsx)(InviteContactDialog, {
@@ -2471,9 +2471,6 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
-                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-                    children: "2025-07-19_08-20-02"
-                }),
                 children
             ]
         })
@@ -2591,4 +2588,4 @@ function TabbarContainer(param) {
 /***/ })
 
 }]);
-//# sourceMappingURL=396-02327788e7020648.js.map
+//# sourceMappingURL=396-3d352bad87de8018.js.map

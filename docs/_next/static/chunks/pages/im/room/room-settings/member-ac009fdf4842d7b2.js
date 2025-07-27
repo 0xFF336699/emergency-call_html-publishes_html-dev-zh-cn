@@ -719,9 +719,6 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
-                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-                    children: "2025-07-19_08-20-02"
-                }),
                 children
             ]
         })
@@ -751,4 +748,4 @@ function AndroidPageContent(param) {
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=member-d010a191ae44dbfa.js.map
+//# sourceMappingURL=member-ac009fdf4842d7b2.js.map

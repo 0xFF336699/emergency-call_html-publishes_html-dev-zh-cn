@@ -330,7 +330,7 @@ function AppShell(param) {
     (window.__NEXT_P = window.__NEXT_P || []).push([
       "/settings",
       function () {
-        return __webpack_require__(84187);
+        return __webpack_require__(72748);
       }
     ]);
     if(false) {}
@@ -436,9 +436,6 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
-                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-                    children: "2025-07-19_08-20-02"
-                }),
                 children
             ]
         })
@@ -460,7 +457,7 @@ function AndroidPageContent(param) {
 
 /***/ }),
 
-/***/ 84187:
+/***/ 72748:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -634,16 +631,40 @@ function SignUpInButton(param) {
     });
 }
 
+// EXTERNAL MODULE: ../../node_modules/.pnpm/next@15.3.5_@babel+core@7.28.0_babel-plugin-macros@3.1.0_react-dom@19.1.0_react@19.1.0__react@19.1.0_sass@1.89.2/node_modules/next/config.js
+var config = __webpack_require__(87891);
+var config_default = /*#__PURE__*/__webpack_require__.n(config);
+;// ./src/components/pages/settings/content/buildtime/AppBuildTime.tsx
+
+
+
+function AppBuildTime() {
+    return /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
+        children: [
+            /*#__PURE__*/ (0,jsx_runtime.jsx)("span", {
+                children: "构建时间："
+            }),
+            /*#__PURE__*/ (0,jsx_runtime.jsx)("span", {
+                children: new Date(config_default()().publicRuntimeConfig.buildTime).toLocaleString()
+            })
+        ]
+    });
+}
+
 ;// ./src/components/pages/settings/content/Settings.tsx
+
 
 
 
 // import {LanguageSelect} from '../../../language-selector/LanguageSelect'
 const SettingsContent = ()=>{
-    return /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-        children: /*#__PURE__*/ (0,jsx_runtime.jsx)(SignUpInButton, {
-            back: "/settings"
-        })
+    return /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
+        children: [
+            /*#__PURE__*/ (0,jsx_runtime.jsx)(SignUpInButton, {
+                back: "/settings"
+            }),
+            /*#__PURE__*/ (0,jsx_runtime.jsx)(AppBuildTime, {})
+        ]
     });
 };
 
@@ -772,4 +793,4 @@ function TabbarContainer(param) {
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=settings-a1fbb858e2d4987d.js.map
+//# sourceMappingURL=settings-a792a9d9a0d0dbae.js.map

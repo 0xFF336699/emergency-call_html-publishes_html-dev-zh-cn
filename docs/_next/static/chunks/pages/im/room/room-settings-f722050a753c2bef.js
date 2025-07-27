@@ -1,4 +1,4 @@
-(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([[869],{
+(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([[400],{
 
 /***/ 1563:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
@@ -281,6 +281,58 @@ function AppbarContainer(props) {
                     })
                 })
             ]
+        })
+    });
+}
+
+
+/***/ }),
+
+/***/ 39272:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ RoomPage)
+/* harmony export */ });
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94513);
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(75640);
+/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(94285);
+/* harmony import */ var _fanfanlo__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(50279);
+/* harmony import */ var _app_ui__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(43173);
+/* harmony import */ var _app_ui__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(1563);
+/* harmony import */ var _im_matrix__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(91234);
+
+
+
+
+
+
+function RoomPage() {
+    const { t } = (0,_fanfanlo__WEBPACK_IMPORTED_MODULE_4__/* .useTranslation */ .Bd)("homepage/pages/im/room/room-settings/content");
+    const router = (0,next_router__WEBPACK_IMPORTED_MODULE_1__.useRouter)();
+    const { id: roomId } = router.query;
+    (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(()=>{
+        // 如果没有roomId，重定向到聊天列表
+        if (!roomId && router.isReady) {
+            router.push('/im');
+        }
+    }, [
+        roomId,
+        router
+    ]);
+    console.log('title=', t("content.title"));
+    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_app_ui__WEBPACK_IMPORTED_MODULE_5__/* .AppShell */ .G, {
+        children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_app_ui__WEBPACK_IMPORTED_MODULE_6__/* .AppbarContainer */ .W, {
+            appbarProps: {
+                title: t("content.title"),
+                back: true
+            },
+            children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_im_matrix__WEBPACK_IMPORTED_MODULE_3__/* .RoomSettingsContent */ .YH, {
+                roomId: roomId
+            })
         })
     });
 }
@@ -651,9 +703,6 @@ function PageContent(param) {
         children: /*#__PURE__*/ (0,jsx_runtime.jsxs)(Box/* default */.A, {
             children: [
                 (reload || reload == undefined) && /*#__PURE__*/ (0,jsx_runtime.jsx)(Reload, {}),
-                /*#__PURE__*/ (0,jsx_runtime.jsx)(Box/* default */.A, {
-                    children: "2025-07-19_08-20-02"
-                }),
                 children
             ]
         })
@@ -675,79 +724,27 @@ function AndroidPageContent(param) {
 
 /***/ }),
 
-/***/ 76028:
+/***/ 96504:
 /***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
 
 
     (window.__NEXT_P = window.__NEXT_P || []).push([
-      "/im/room/room-settings/privacy",
+      "/im/room/room-settings",
       function () {
-        return __webpack_require__(95845);
+        return __webpack_require__(39272);
       }
     ]);
     if(false) {}
   
-
-/***/ }),
-
-/***/ 95845:
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* binding */ PrivacySettingsPage)
-/* harmony export */ });
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(94513);
-/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(75640);
-/* harmony import */ var next_router__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(next_router__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(94285);
-/* harmony import */ var _fanfanlo__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(50279);
-/* harmony import */ var _app_ui__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(43173);
-/* harmony import */ var _app_ui__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(1563);
-/* harmony import */ var _im_matrix__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(91234);
-
-
-
-
-
-
-function PrivacySettingsPage() {
-    const { t } = (0,_fanfanlo__WEBPACK_IMPORTED_MODULE_4__/* .useTranslation */ .Bd)("homepage/pages/im/room/room-settings/privacy/content");
-    const router = (0,next_router__WEBPACK_IMPORTED_MODULE_1__.useRouter)();
-    const { id: roomId } = router.query;
-    (0,react__WEBPACK_IMPORTED_MODULE_2__.useEffect)(()=>{
-        // 如果没有roomId，重定向到聊天列表
-        if (!roomId && router.isReady) {
-            router.push('/im');
-        }
-    }, [
-        roomId,
-        router
-    ]);
-    console.log('title=', t("content.title"));
-    return /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_app_ui__WEBPACK_IMPORTED_MODULE_5__/* .AppShell */ .G, {
-        children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_app_ui__WEBPACK_IMPORTED_MODULE_6__/* .AppbarContainer */ .W, {
-            appbarProps: {
-                title: t("content.title"),
-                back: true
-            },
-            children: /*#__PURE__*/ (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)(_im_matrix__WEBPACK_IMPORTED_MODULE_3__/* .PrivacySettingsContent */ .Bn, {
-                roomId: roomId
-            })
-        })
-    });
-}
-
 
 /***/ })
 
 },
 /******/ __webpack_require__ => { // webpackRuntimeModules
 /******/ var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-/******/ __webpack_require__.O(0, [415,917,636,593,792], () => (__webpack_exec__(76028)));
+/******/ __webpack_require__.O(0, [415,917,636,593,792], () => (__webpack_exec__(96504)));
 /******/ var __webpack_exports__ = __webpack_require__.O();
 /******/ _N_E = __webpack_exports__;
 /******/ }
 ]);
-//# sourceMappingURL=privacy-28b0aef4d76b2912.js.map
+//# sourceMappingURL=room-settings-f722050a753c2bef.js.map
